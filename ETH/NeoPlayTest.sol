@@ -118,10 +118,10 @@ contract NEOPLAYdice is usingOraclize {
         newval = preval*(100-HouseEdge)/100;
         houseDeposit(fee);
         if(odd<random){
-            //you win nigga
+			//they win
             client.ass.transfer(newval);
-        }else{
-            //we win nigga
+        }else
+			//we win
             reroll();
         }
     }
