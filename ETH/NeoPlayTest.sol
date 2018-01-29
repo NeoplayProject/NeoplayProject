@@ -6,6 +6,10 @@ contract getOdds is usingOraclize {
  
     uint private odds;
     event Log(string text);
+
+    function getOdds() public{
+        update();
+    }
     
     function getOdd() public returns (uint){
         return odds;
