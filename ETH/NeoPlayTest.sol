@@ -27,7 +27,7 @@ contract getOdds is usingOraclize {
 }
 
 contract getReRoll is usingOraclize {
-    //doesnt do shit yet
+    //this checks if we recieved tokens and then deposists them to us
 }
 contract NEOPLAYdice is usingOraclize {
     struct Party{
@@ -40,7 +40,10 @@ contract NEOPLAYdice is usingOraclize {
     uint private wamount;
     uint public min_value=1 finney;
     uint private rerolls;
-    
+    uint256 private preval;
+    uint256 private newval;
+    uint256 private fee;
+    uint private odd;
     event newRandomNumber_bytes(bytes);
     event newRandomNumber_uint(uint);
     Party private house = Party(0x123, 30);
@@ -67,7 +70,7 @@ contract NEOPLAYdice is usingOraclize {
         wamount = new_amount;
     }
     
-    function uprerollCount(){
+    function uprerollCount() private{
         rerolls+=1;
     }
     
@@ -77,13 +80,14 @@ contract NEOPLAYdice is usingOraclize {
         houseAddy().transfer(getAmount());
         pendingWithdrawals[client.ass]=0;
     }
+
     function NEOPLAYdice() public payable bnr_checked{
         oraclize_setProof(proofType_Ledger); //sets the ledger authenticity proof in constructor
         update(); //asks for N random bytes on contract
         play();
            
     }
-    function __callback(bytes32 _queryId, string _result, bytes _proof) public{ 
+    function __callback(bytes32 _queryId, string _result, bytes _proof) public returns (uint){ 
         if (msg.sender != oraclize_cbAddress())revert();
         
         if (oraclize_randomDS_proofVerify__returnCode(_queryId, _result, _proof) != 0) {
@@ -112,20 +116,36 @@ contract NEOPLAYdice is usingOraclize {
     }
     
     function play() public payable{
-        uint odd = new getOdds().getOdd();
+        odd = new getOdds().getOdd();
         preval = msg.value;
         fee = preval*(HouseEdge)/100;
         newval = preval*(100-HouseEdge)/100;
         houseDeposit(fee);
         if(odd<random){
-			//they win
+            //they win
             client.ass.transfer(newval);
-        }else
-			//we win
+        }else{
+            //we win
             reroll();
         }
     }
+
+    function rerollprice() public returns(uint256) {
+        return preval**rerolls;
+    }
+
     function reroll() public payable{
-        
+        //if (getReRoll()){
+            update();
+            preval = newval;
+            fee = preval*(HouseEdge)/100;
+            newval = newval*(100-HouseEdge)/100;
+            houseDeposit(fee);
+            if(odd<random){
+                client.ass.transfer(newval);
+            }else{
+                reroll();
+            }
+        //}
     }
 }
