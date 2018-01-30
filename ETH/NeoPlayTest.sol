@@ -91,6 +91,7 @@ contract NEOPLAYdice is usingOraclize {
         play();
            
     }
+    
     function __callback(bytes32 _queryId, string _result, bytes _proof) public returns (uint){ 
         if (msg.sender != oraclize_cbAddress())revert();
         
@@ -122,15 +123,15 @@ contract NEOPLAYdice is usingOraclize {
     function play() public payable{
         odd = new getOdds().getOdd();
         preval = msg.value;
-        fee = preval*(HouseEdge)/100;
-        newval = preval*(100-HouseEdge)/100;
-        houseDeposit(fee);
-        if(odd<random){
-            //they win
-            client.ass.transfer(newval);
+        if(odd <= random){
+            //they lose
+            fee = preval*(HouseEdge)/100;
+        	newval = preval*(100-HouseEdge)/100;
+        	houseDeposit(fee);            
+            reroll();
         }else{
             //we win
-            reroll();
+            client.ass.transfer(newval);
         }
     }
 
