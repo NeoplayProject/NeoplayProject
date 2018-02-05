@@ -32,11 +32,8 @@ contract RollToken is owned, TokenERC20{
 
     function RollToken(uint256 initialSupply,string tokenName,string tokenSymbol) TokenERC20(initialSupply,tokenName,tokenSymbol){
     }
-    function mintToken(address target, uint256 mintedAmount) onlyOwner {
-        balanceOf[target] += mintedAmount;
-        totalSupply += mintedAmount;
-    }
     function _transfer(address _from,address _to, uint _value) internal {
+        require(_to != 0x0);
         require(balanceOf[_from] >= _value);
         require(balanceOf[_to] + _value > balanceOf[_to]);
         require(!frozenAccount[_from] && !frozenAccount[_to]);
@@ -45,12 +42,9 @@ contract RollToken is owned, TokenERC20{
         balanceOf[_to] += _value;
         Transfer(_from,_to,_value);
     }
-    function transfer(address _to, uint256 _value) public{
-        _transfer(msg.sender,_to,_value);
-    }
-    function transferFrom(address _from, address _to.) public returns (bool success){
-        _transfer(_from,_to,_value);
-        return true;
+    function mintToken(address target, uint256 mintedAmount) onlyOwner {
+        balanceOf[target] += mintedAmount;
+        totalSupply += mintedAmount;
     }
     function burn(uint256 _value) public returns (bool succ){
         require(balanceOf[msg.sender] >= _value);
@@ -66,5 +60,14 @@ contract RollToken is owned, TokenERC20{
         totalSupply -= _value;
         Burn(_from,_value);
         return true;
+    }
+    function buy() payable public{
+        uint amount = msg.value / buyPrice;
+        _transfer(this, msg.sender, amount);
+    }
+    function sell(uint256 amount) payable public{
+        require(this.balance >= amount*sellPrice);
+        _transfer(msg.sender,this,amount);
+        msg.sender.transfer(amount*sellPrice);
     }
 }
