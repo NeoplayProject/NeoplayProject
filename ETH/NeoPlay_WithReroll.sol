@@ -1,7 +1,8 @@
 pragma solidity ^0.4.11;
-import "github.com/oraclize/ethereum-api/blob/master/oraclizeAPI_0.5.sol";
-import "github.com/NEOPLAYdev/NEOPLAY/tree/master/ETH/Reroll.sol";
-//import "browser/Oraclize.sol";\
+//import "github.com/oraclize/ethereum-api/blob/master/oraclizeAPI_0.5.sol";
+//import "github.com/NEOPLAYdev/NEOPLAY/tree/master/ETH/Reroll.sol";
+import "browser/Oraclize.sol";
+import "browser/Reroll.sol";
 contract NEOPLAYdice is usingOraclize,Reroll{
     
     event Log(string text);
@@ -18,7 +19,7 @@ contract NEOPLAYdice is usingOraclize,Reroll{
     mapping(address => uint) betOdds;
     
     modifier bnr_checked{
-        if(msg.value >= houseaddr.balance/8){
+        if((msg.sender.balance > msg.value)&&(msg.value >= houseaddr.balance/8)){
             _;
         }
     }
@@ -26,7 +27,8 @@ contract NEOPLAYdice is usingOraclize,Reroll{
         oraclize_setNetwork(networkID_consensys);
         update();
         play(odds);
-        reroll rerollAdd = new Reroll(msg.sender,msg.value,odds);
+        Reroll rerollAdd = new Reroll();
+        rerollAdd.addData(msg.sender,msg.value,odds);
 
 
     }
@@ -54,8 +56,9 @@ contract NEOPLAYdice is usingOraclize,Reroll{
     function __callback(bytes32 myid, string result)public {
         onCallback(result);
         if (msg.sender != oraclize_cbAddress()) revert();
-        randomInt = parseInt(result);
+        randomInt = uint(keccak256(parseInt(result)))%99;
         newRandom(randomInt);
+        myid;
     }
     function update()public {
         oraclize_query("URL", "json(https://api.random.org/json-rpc/1/invoke).result.random.data.0", '\n{"jsonrpc":"2.0","method":"generateIntegers","params":{"apiKey":"45e90a83-8879-4727-a036-460be2a350aa","n":1,"min":0,"max":99,"replacement":true,"base":10},"id":1}');
