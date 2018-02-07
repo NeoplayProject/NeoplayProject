@@ -1,5 +1,0 @@
-# NEOPLAY
-
-# What is NEOPLAY? <h1> tag
-
-Neoplay is a decentralized, open-source, provably-fair, cross-network dicing platform that enables users to place bets on the result of a random 100-sided dice roll. Users are allowed to place bets in Ether or Gas (NEO dividend) and choose their odds of winning with a competitively low 1% house commission. The smart contract will enable players to use Neoplay’s native token [PLAY] to reroll their loosing bets against the house with the user’s odds of winning remaining the same effectively negating the house “edge”. In the event that the player wins the reroll, they will be credited their winnings immediately. In the event that the player loses the reroll they will be prompted to reroll again. Every consecutive reroll will cost the user more PLAY. **Neoplay will immediately burn every PLAY token used to reroll losing bets the moment the reroll mechanic is invoked by the user.**
