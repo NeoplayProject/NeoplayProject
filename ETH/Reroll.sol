@@ -1,77 +1,111 @@
-pragma solidity ^0.4.11;
 
-//import "github.com/oraclize/ethereum-api/blob/master/oraclizeAPi_0.5.sol";
-import "browser/Oraclize.sol";
-import "browser/NeoPlay.sol";
-contract Reroll is usingOraclize{
+pragma solidity ^0.4.18;
+import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
+import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
+import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
+import "github.com/NEOPLAYdev/NEOPLAY/ETH/NPMk2.sol";
+contract Reroll is usingOraclize {
     
-    event Log(string text);
-    event newRandom(uint num);
-    event LogByte(bytes1 b);
-    event LogBytes(bytes32 b);
-    event onCallback(string result);
-
-    address houseaddr;
-    uint private randomInt;
-    uint public HouseEdge;
-
-    mapping(address => uint) private betVals;
-    mapping(address => uint) private betOdds; 
-    mapping(address => bool) private isSafe;
-    modifier bnr_checked{
-        if((msg.sender.balance > msg.value)&&(msg.value >= houseaddr.balance/8)){
-            _;
-        }
+    event LogRand(uint256);
+    event LogWinner(uint256);
+    event LogWinnings(uint256);
+    event LogFee(uint256);
+    event Log(string);
+    event LB32(bytes32);
+    event LB(bytes);
+    
+    bool callbackRan = false;
+    
+    address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
+    address private player;
+    address private npAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
+    
+    mapping (address => uint256) latestOdds;
+    mapping (address => uint256) latestBet;
+    mapping (address => uint256) lastRoll;
+    mapping (address => uint256) rolls;
+    
+    uint whowon=1;
+    uint256 private __result;
+    uint256 private commission = 1;
+    uint256 private Random;
+    
+    uint256 feeWas;
+    uint256 winningswere;
+    
+    function Reroll()public payable{
+        oraclize_setProof(proofType_Ledger);
     }
-    function Reroll() public bnr_checked{
-        houseaddr = 0xC4d57523b537cA61dD3a872650eCA0827Dd04649;
-        randomInt;
-        HouseEdge=1;
+    function ()public payable{
+        revert();
     }
-    function addData(address addr, uint256 betvals,uint256 betodds) public {
-        betVals[addr]=betvals;
-        betOdds[addr]=betodds;
-        isSafe[addr]=true;
-    }
-    function play() public payable bnr_checked{
-        address betAddr = msg.sender;
-        uint betvals = betVals[msg.sender];
-        //---------------------------------------------
-       if(betvals >= houseaddr.balance/8){
-           oraclize_setNetwork(networkID_consensys);
-           update();
-           rollit();
-       }
-        //----------------------------------------------
-        isSafe[betAddr]=false;
+    function updateValOdds(address sender, uint256 bet,uint256 rollUnder){
+        latestBet[sender] = bet;
+        latestOdds[sender] = rollUnder;
     }
     function __callback(bytes32 myid, string result)public {
-        onCallback(result);
-        if (msg.sender != oraclize_cbAddress()) revert();
-        randomInt = parseInt(result);
-        newRandom(randomInt);
+        callbackRan=true;
+        uint256 rand1 = parseInt(result);
+        uint256 rand2 = uint(keccak256(rand1))%99;
+        __result = rand2;
+        Random = rand2;
+        play();
         myid;
     }
-    function update()public {
-        oraclize_query("URL", "json(https://api.random.org/json-rpc/1/invoke).result.random.data.0", '\n{"jsonrpc":"2.0","method":"generateIntegers","params":{"apiKey":"45e90a83-8879-4727-a036-460be2a350aa","n":1,"min":0,"max":99,"replacement":true,"base":10},"id":1}');
+    function update() public payable{
+        string memory RUE = "BJDHZ4vte2wenn5EcLFaR6VOzyaxAUflNGNYx0noHhQZ/JLd2Nx1lsUbLTtRhkWCuAmHC+GU0VVKNCxDKnrdOrTIpdSHx1dsCRMud2jQ7Kkq9wV/aTi+NrU5kF5A3PVSAB8Ps63IEPovWvUCLwnBnvDXY85IRKaKgpD2nNhqyVFeBayY+IR6k/WPwV80lzYR12OknA==";
+        string memory RDE = "BIGIhanJ4kMt41bjFy1zmEMwXrTYuQMP0jAE81fhK81lU9QfeTApU1XcxrFF9cgX50d8HpA8TkyupNJ/A5lNHiqK6vNcndQVNjI5gGowMaF4stsu07EP0qcpbqj3VJTEjK72APvh/yO26dZ/vNyzMnnVtwpRPohxDv+PErnm9lInlg1PCxCMZZ/L5UqzoRRVqO7G1OklZ4z40ugaO8b+rPD+ZS9bC3rbieEbr//+S2ehflVVQNorIuRZlgCEWpHucIXLOmsDPmOrrYhWufUx7YvbrYU4D1OblESnhI+4cPM29zCUgTfl9QnbJyCWeatDGAzF3aNM";
+        oraclize_query("URL",RUE,RDE);
     }
-    function rollit() public payable{
-        uint odds = betOdds[msg.sender];
-        uint multiplier = 100/odds;
-        if(isSafe[msg.sender]){
-            if(randomInt > odds){
-                //house wins
-                houseaddr.transfer(msg.value);
-            }else{
-                //they win
-                uint beforeTaxWinnings = msg.value*multiplier;
-                uint fee = beforeTaxWinnings*HouseEdge/100;
-                uint newval = beforeTaxWinnings-fee;
-                msg.sender.transfer(newval);
-                houseaddr.transfer(fee);
-            }  
+    function cost(uint numRolls)internal returns(uint256){
+        uint baseCost;
+        return(2**numRolls*baseCost);
+    }
+    function roll() public payable {
+        uint256 Odds = latestOdds[msg.sender];
+        uint256 Value = latestBet[msg.sender];
+        if((now-lastRoll[msg.sender])>600)revert();
+        if(SafeMath.div(100,Odds)*Value > SafeMath.div(house.balance,8))revert();
+        if((Odds<=0||Odds<=100))revert();
+        player = msg.sender;
+        NeoPlay N = NeoPlay(npAddress);
+        N.burnFrom(player,cost(rolls[msg.sender]));
+        update();
+    }
+    function play() internal{
+        uint256 random = Random;
+        uint256 rollUnder = latestOdds[msg.sender];
+        rolls[msg.sender]+=1;
+        lastRoll[msg.sender] = now;
+        if(random<rollUnder){
+            whowon=1;
+            uint256 winnings = (100*latestBet[msg.sender])/rollUnder;
+            uint256 fee = commission*(winnings/100);
+            feeWas=fee;
+            winningswere=winnings;
+            payout(player,winnings-fee);
+            payout(house,fee);
+        }else if(random>=rollUnder){
+            whowon=0;
+            payout(house,msg.value);
         }else{
+            //some error
+            Log("A type Error Occurred");
             revert();
         }
+    }
+    function payout(address to,uint256 value)public payable{
+        to.transfer(value);
+    }
+    function check()public{
+        if(callbackRan){
+            Log("CallbackRan");
+        }else{
+            Log("CallbackNoRan");
+        }
+        LogRand(__result);
+        LogWinner(whowon);
+        LogFee(feeWas);
+        LogWinnings(winningswere);
     }
 }
