@@ -1,7 +1,8 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.20;
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
-contract NPMk2 is usingOraclize {
+import "github.com/NEOPLAYdev/NEOPLAY/ETH/Reroll.sol";
+contract NPMk2 is Reroll,usingOraclize,NeoPlay{
     
     event LogRand(uint256);
     event LogWinner(uint256);
@@ -15,6 +16,8 @@ contract NPMk2 is usingOraclize {
     
     address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
     address private player;
+    address private tokenAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
+    address private rerollAddress;
     
     uint whowon=1;
     uint256 private __result;
@@ -50,6 +53,8 @@ contract NPMk2 is usingOraclize {
         betOdds = rollUnder;
         betValue = msg.value;
         player = msg.sender;
+        Reroll R = Reroll(RerollAddress);
+        R.updateValOdds(msg.sender,msg.value,rollUnder);
         if(rollUnder==0||rollUnder>=100)revert();
         if(100*betValue/betOdds>house.balance/8)revert();
         update();
