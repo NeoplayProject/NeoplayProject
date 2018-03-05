@@ -1,6 +1,7 @@
 pragma solidity ^0.4.20;
-import "github.com/NEOPLAYdev/NEOPLAY/ETH/NPMk2.sol";
-contract Reroll is NPMk2{
+import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
+import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
+contract Reroll is NeoPlay,usingOraclize{
     event LogRand(uint256);
     event LogWinner(uint256);
     event LogWinnings(uint256);
@@ -59,7 +60,7 @@ contract Reroll is NPMk2{
         uint256 tokenValue = N.buyPrice();
         uint256 BaseCost = latestBet[msg.sender]/tokenValue;
         C=0;
-        for(i=1;i<numRolls;i++){
+        for(i=1;i<3*numRolls;i++){
             C+=(BaseCost)/(2**i);
         }
         return(C);
