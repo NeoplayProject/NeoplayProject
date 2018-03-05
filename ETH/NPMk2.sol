@@ -1,8 +1,6 @@
-
 pragma solidity ^0.4.18;
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
-import "github.com/NEOPLAYdev/NEOPLAY/ETH/Reroll.sol";
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
+import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
 contract NPMk2 is usingOraclize {
     
     event LogRand(uint256);
@@ -53,7 +51,7 @@ contract NPMk2 is usingOraclize {
         betValue = msg.value;
         player = msg.sender;
         if(rollUnder==0||rollUnder>=100)revert();
-        if(100*Value/Odds>house.balance/8)revert();
+        if(100*betValue/betOdds>house.balance/8)revert();
         update();
     }
     function play() internal{
