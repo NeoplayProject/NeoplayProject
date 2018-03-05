@@ -1,8 +1,6 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.20;
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/NPMk2.sol";
-import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
-contract Reroll is NeoPlay,NPMk2{
-    
+contract Reroll is NPMk2{
     event LogRand(uint256);
     event LogWinner(uint256);
     event LogWinnings(uint256);
@@ -54,9 +52,17 @@ contract Reroll is NeoPlay,NPMk2{
         string memory RDE = "BIGIhanJ4kMt41bjFy1zmEMwXrTYuQMP0jAE81fhK81lU9QfeTApU1XcxrFF9cgX50d8HpA8TkyupNJ/A5lNHiqK6vNcndQVNjI5gGowMaF4stsu07EP0qcpbqj3VJTEjK72APvh/yO26dZ/vNyzMnnVtwpRPohxDv+PErnm9lInlg1PCxCMZZ/L5UqzoRRVqO7G1OklZ4z40ugaO8b+rPD+ZS9bC3rbieEbr//+S2ehflVVQNorIuRZlgCEWpHucIXLOmsDPmOrrYhWufUx7YvbrYU4D1OblESnhI+4cPM29zCUgTfl9QnbJyCWeatDGAzF3aNM";
         oraclize_query("URL",RUE,RDE);
     }
-    function cost(uint numRolls)internal returns(uint256){
-        uint baseCost;
-        return(2**numRolls*baseCost);
+    function cost(uint numRolls)internal view returns(uint256){
+        NeoPlay N = NeoPlay(npAddress);
+        uint i;
+        uint256 C;
+        uint256 tokenValue = N.buyPrice();
+        uint256 BaseCost = latestBet[msg.sender]/tokenValue;
+        C=0;
+        for(i=1;i<numRolls;i++){
+            C+=(BaseCost)/(2**i);
+        }
+        return(C);
     }
     function roll() public payable {
         uint256 Odds = latestOdds[msg.sender];
