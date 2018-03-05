@@ -1,10 +1,6 @@
-
 pragma solidity ^0.4.18;
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
-import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
-import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/NPMk2.sol";
-contract Reroll is usingOraclize {
+contract Reroll is NPMk2{
     
     event LogRand(uint256);
     event LogWinner(uint256);
@@ -39,7 +35,7 @@ contract Reroll is usingOraclize {
     function ()public payable{
         revert();
     }
-    function updateValOdds(address sender, uint256 bet,uint256 rollUnder){
+    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)public {
         latestBet[sender] = bet;
         latestOdds[sender] = rollUnder;
     }
@@ -65,7 +61,7 @@ contract Reroll is usingOraclize {
         uint256 Odds = latestOdds[msg.sender];
         uint256 Value = latestBet[msg.sender];
         if((now-lastRoll[msg.sender])>600)revert();
-        if(SafeMath.div(100,Odds)*Value > SafeMath.div(house.balance,8))revert();
+        if(100*Value/Odds>house.balance/8)revert();
         if((Odds<=0||Odds<=100))revert();
         player = msg.sender;
         NeoPlay N = NeoPlay(npAddress);
