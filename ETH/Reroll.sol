@@ -1,7 +1,7 @@
 pragma solidity ^0.4.18;
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/NPMk2.sol";
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
-contract Reroll is NeoPlay{
+contract Reroll is NeoPlay,NPMk2{
     
     event LogRand(uint256);
     event LogWinner(uint256);
