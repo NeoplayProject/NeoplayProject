@@ -14,7 +14,7 @@ contract Reroll is usingOraclize{
     
     address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
     address private player;
-    address private npAddress = 0xAe6d169FbBd40bBF4542C735cADd5bcB4A7d73De;
+    address private npAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
     
     mapping (address => uint256) latestOdds;
     mapping (address => uint256) latestBet;
@@ -35,9 +35,12 @@ contract Reroll is usingOraclize{
     function () public payable{
         revert();
     }
-    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)public{
+    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)internal{
         latestBet[sender] = bet;
         latestOdds[sender] = rollUnder;
+    }
+    function test(string t)public{
+        Log(t);
     }
     function __callback(bytes32 myid, string result)public {
         callbackRan=true;
