@@ -1,8 +1,7 @@
 pragma solidity ^0.4.20;
-import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/Reroll.sol";
-contract NPMk2 is Reroll,usingOraclize,NeoPlay{
+import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
+contract NPMk2 is Reroll{
     
     event LogRand(uint256);
     event LogWinner(uint256);
@@ -44,16 +43,13 @@ contract NPMk2 is Reroll,usingOraclize,NeoPlay{
     function update() public payable{
         string memory RUE = "BJDHZ4vte2wenn5EcLFaR6VOzyaxAUflNGNYx0noHhQZ/JLd2Nx1lsUbLTtRhkWCuAmHC+GU0VVKNCxDKnrdOrTIpdSHx1dsCRMud2jQ7Kkq9wV/aTi+NrU5kF5A3PVSAB8Ps63IEPovWvUCLwnBnvDXY85IRKaKgpD2nNhqyVFeBayY+IR6k/WPwV80lzYR12OknA==";
         string memory RDE = "BIGIhanJ4kMt41bjFy1zmEMwXrTYuQMP0jAE81fhK81lU9QfeTApU1XcxrFF9cgX50d8HpA8TkyupNJ/A5lNHiqK6vNcndQVNjI5gGowMaF4stsu07EP0qcpbqj3VJTEjK72APvh/yO26dZ/vNyzMnnVtwpRPohxDv+PErnm9lInlg1PCxCMZZ/L5UqzoRRVqO7G1OklZ4z40ugaO8b+rPD+ZS9bC3rbieEbr//+S2ehflVVQNorIuRZlgCEWpHucIXLOmsDPmOrrYhWufUx7YvbrYU4D1OblESnhI+4cPM29zCUgTfl9QnbJyCWeatDGAzF3aNM";
-        //string memory RU = "json(https://api.random.org/json-rpc/1/invoke).result.random.data.0";
-        //string memory RD = '\n{"jsonrpc":"2.0","method":"generateIntegers","params":{"apiKey":"45e90a83-8879-4727-a036-460be2a350aa","n":1,"min":0,"max":99},"id":42}';
         oraclize_query(10,"URL",RUE,RDE);
-        //oraclize_query(60,"URL",RU,RD);
     }
     function roll(uint256 rollUnder)public payable{
         betOdds = rollUnder;
         betValue = msg.value;
         player = msg.sender;
-        Reroll R = Reroll(RerollAddress);
+        Reroll R = Reroll(rerollAddress);
         R.updateValOdds(msg.sender,msg.value,rollUnder);
         if(rollUnder==0||rollUnder>=100)revert();
         if(100*betValue/betOdds>house.balance/8)revert();
