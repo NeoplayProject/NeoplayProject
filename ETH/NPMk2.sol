@@ -16,7 +16,7 @@ contract NPMk2 is Reroll{
     address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
     address private player;
     address private tokenAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
-    address private rerollAddress;
+    address private rerollAddress = 0x4a4931547084DB0c1ef603EEAd3d2c1258C07dA1;
     
     uint whowon=1;
     uint256 private __result;
@@ -49,8 +49,7 @@ contract NPMk2 is Reroll{
         betOdds = rollUnder;
         betValue = msg.value;
         player = msg.sender;
-        Reroll R = Reroll(rerollAddress);
-        R.updateValOdds(msg.sender,msg.value,rollUnder);
+        upValOdds(msg.sender,msg.value,rollUnder);
         if(rollUnder==0||rollUnder>=100)revert();
         if(100*betValue/betOdds>house.balance/8)revert();
         update();
@@ -77,6 +76,14 @@ contract NPMk2 is Reroll{
     }
     function payout(address to,uint256 value)public payable{
         to.transfer(value);
+    }
+    function upValOdds(address sender,uint256 value, uint256 rollUnder)internal{
+        Reroll R = Reroll(rerollAddress);
+        R.updateValOdds(sender,value,rollUnder);
+    }
+    function connect(string t)public{
+        Reroll R = Reroll(rerollAddress);
+        R.test(t);
     }
     function check()public{
         if(callbackRan){
