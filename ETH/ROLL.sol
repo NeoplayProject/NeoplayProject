@@ -1,6 +1,4 @@
 pragma solidity ^0.4.20;
-import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
-
 contract owned {
     address public owner;
 
