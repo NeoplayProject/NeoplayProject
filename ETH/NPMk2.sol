@@ -16,7 +16,7 @@ contract NPMk2 is Reroll{
     address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
     address private player;
     address private tokenAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
-    address private rerollAddress = 0x4a4931547084DB0c1ef603EEAd3d2c1258C07dA1;
+    address private rerollAddress = 0xA3bB52b77dEf948DFc09F43a6F8499b3D718ECFA;
     
     uint whowon=1;
     uint256 private __result;
@@ -43,7 +43,7 @@ contract NPMk2 is Reroll{
     function update() public payable{
         string memory RUE = "BJDHZ4vte2wenn5EcLFaR6VOzyaxAUflNGNYx0noHhQZ/JLd2Nx1lsUbLTtRhkWCuAmHC+GU0VVKNCxDKnrdOrTIpdSHx1dsCRMud2jQ7Kkq9wV/aTi+NrU5kF5A3PVSAB8Ps63IEPovWvUCLwnBnvDXY85IRKaKgpD2nNhqyVFeBayY+IR6k/WPwV80lzYR12OknA==";
         string memory RDE = "BIGIhanJ4kMt41bjFy1zmEMwXrTYuQMP0jAE81fhK81lU9QfeTApU1XcxrFF9cgX50d8HpA8TkyupNJ/A5lNHiqK6vNcndQVNjI5gGowMaF4stsu07EP0qcpbqj3VJTEjK72APvh/yO26dZ/vNyzMnnVtwpRPohxDv+PErnm9lInlg1PCxCMZZ/L5UqzoRRVqO7G1OklZ4z40ugaO8b+rPD+ZS9bC3rbieEbr//+S2ehflVVQNorIuRZlgCEWpHucIXLOmsDPmOrrYhWufUx7YvbrYU4D1OblESnhI+4cPM29zCUgTfl9QnbJyCWeatDGAzF3aNM";
-        oraclize_query(10,"URL",RUE,RDE);
+        oraclize_query("URL",RUE,RDE);
     }
     function roll(uint256 rollUnder)public payable{
         betOdds = rollUnder;
