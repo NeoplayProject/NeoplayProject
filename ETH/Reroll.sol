@@ -1,6 +1,7 @@
 pragma solidity ^0.4.20;
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
+//import "browser/Token.sol";
 contract Reroll is NeoPlay,usingOraclize{
     event LogRand(uint256);
     event LogWinner(uint256);
@@ -14,7 +15,7 @@ contract Reroll is NeoPlay,usingOraclize{
     
     address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
     address private player;
-    address private npAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
+    address private npAddress = 0xAe6d169FbBd40bBF4542C735cADd5bcB4A7d73De;
     
     mapping (address => uint256) latestOdds;
     mapping (address => uint256) latestBet;
@@ -32,7 +33,7 @@ contract Reroll is NeoPlay,usingOraclize{
     function Reroll()public payable{
         oraclize_setProof(proofType_Ledger);
     }
-    function ()public payable{
+    function () public payable{
         revert();
     }
     function updateValOdds(address sender, uint256 bet,uint256 rollUnder)public {
