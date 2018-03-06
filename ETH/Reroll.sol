@@ -35,7 +35,7 @@ contract Reroll is usingOraclize{
     function () public payable{
         revert();
     }
-    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)internal{
+    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)public{
         latestBet[sender] = bet;
         latestOdds[sender] = rollUnder;
     }
