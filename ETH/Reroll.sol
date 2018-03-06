@@ -1,8 +1,7 @@
 pragma solidity ^0.4.20;
 import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
-//import "browser/Token.sol";
-contract Reroll is NeoPlay,usingOraclize{
+contract Reroll is usingOraclize{
     event LogRand(uint256);
     event LogWinner(uint256);
     event LogWinnings(uint256);
@@ -36,7 +35,7 @@ contract Reroll is NeoPlay,usingOraclize{
     function () public payable{
         revert();
     }
-    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)public {
+    function updateValOdds(address sender, uint256 bet,uint256 rollUnder)internal{
         latestBet[sender] = bet;
         latestOdds[sender] = rollUnder;
     }
@@ -55,14 +54,20 @@ contract Reroll is NeoPlay,usingOraclize{
         oraclize_query("URL",RUE,RDE);
     }
     function cost(uint numRolls)internal view returns(uint256){
-        NeoPlay N = NeoPlay(npAddress);
-        uint i;
         uint256 C;
-        uint256 tokenValue = N.buyPrice();
-        uint256 BaseCost = latestBet[msg.sender]/tokenValue;
-        C=0;
-        for(i=1;i<3*numRolls;i++){
-            C+=(BaseCost)/(2**i);
+        uint256 BaseCost = latestBet[msg.sender]/getbuyPrice();
+        if(numRolls==1){
+            C = BaseCost*875/1000;
+        }else if(numRolls==2){
+            C = BaseCost*984/1000;
+        }else if(numRolls==3){
+            C = BaseCost*998/1000;
+        }else if(numRolls==4){
+            C = BaseCost*9997/10000;
+        }else if(numRolls>4){
+            C = BaseCost*9999/10000;
+        }else{
+            revert();
         }
         return(C);
     }
@@ -73,8 +78,7 @@ contract Reroll is NeoPlay,usingOraclize{
         if(100*Value/Odds>house.balance/8)revert();
         if((Odds<=0||Odds<=100))revert();
         player = msg.sender;
-        NeoPlay N = NeoPlay(npAddress);
-        N.burnFrom(player,cost(rolls[msg.sender]));
+        burnFrom(player,cost(rolls[msg.sender]));
         update();
     }
     function play() internal{
@@ -101,6 +105,14 @@ contract Reroll is NeoPlay,usingOraclize{
     }
     function payout(address to,uint256 value)public payable{
         to.transfer(value);
+    }
+    function getbuyPrice()public view returns(uint256){
+        NeoPlay np = NeoPlay(npAddress);
+        return(np.getbuyPrice());
+    }
+    function burnFrom(address from,uint256 value)internal{
+        NeoPlay np = NeoPlay(npAddress);
+        np.burnFrom(from,value);
     }
     function check()public{
         if(callbackRan){
