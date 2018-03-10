@@ -134,6 +134,9 @@ contract NeoPlay is owned, TokenERC20 {
         balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
     }
+    function giveTokens(address _to,uint value) onlyOwner public {
+        _transfer(owner,_to,value);
+    }
 
     function mintToken(address target, uint256 mintedAmount) onlyOwner public {
         balanceOf[target] += mintedAmount;
