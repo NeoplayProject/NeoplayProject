@@ -27,6 +27,7 @@ contract TokenERC20 {
     mapping (address => uint256) public balanceOf;
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Burn(address indexed from, uint256 value);
+    event Log(string t);
 
     function TokenERC20(
         uint256 initialSupply,
@@ -120,6 +121,12 @@ contract NeoPlay is owned, TokenERC20 {
     function getbuyPrice()public view returns(uint256){
         return(buyPrice);
     }
+    function isOwner()public pure{
+        if(msg.sender==owner)emit Log('Owner');
+        else{
+            emit Log('Not Owner');
+        }
+    }
     function getsellPrice()public view returns(uint256){
         return(sellPrice);
     }
@@ -134,10 +141,6 @@ contract NeoPlay is owned, TokenERC20 {
         balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
     }
-    function giveTokens(address _to,uint value) onlyOwner public {
-        _transfer(owner,_to,value);
-    }
-
     function mintToken(address target, uint256 mintedAmount) onlyOwner public {
         balanceOf[target] += mintedAmount;
         totalSupply += mintedAmount;
