@@ -40,7 +40,7 @@ contract Reroll is usingOraclize{
         latestOdds[sender] = rollUnder;
     }
     function test(string t)public{
-        Log(t);
+        emit LogWinner(latestBet[msg.sender]);
     }
     function __callback(bytes32 myid, string result)public {
         callbackRan=true;
@@ -102,7 +102,7 @@ contract Reroll is usingOraclize{
             payout(house,msg.value);
         }else{
             //some error
-            Log("A type Error Occurred");
+            emit Log("A type Error Occurred");
             revert();
         }
     }
@@ -119,13 +119,13 @@ contract Reroll is usingOraclize{
     }
     function check()public{
         if(callbackRan){
-            Log("CallbackRan");
+            emit Log("CallbackRan");
         }else{
-            Log("CallbackNoRan");
+            emit Log("CallbackNoRan");
         }
-        LogRand(__result);
-        LogWinner(whowon);
-        LogFee(feeWas);
-        LogWinnings(winningswere);
+        emit LogRand(__result);
+        emit LogWinner(whowon);
+        emit LogFee(feeWas);
+        emit LogWinnings(winningswere);
     }
 }
