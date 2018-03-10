@@ -104,7 +104,7 @@ contract TokenERC20 {
 }
 
 
-contract NeoPlay is owned, TokenERC20,address {
+contract NeoPlay is owned, TokenERC20 {
 
     uint256 public sellPrice;
     uint256 public buyPrice;
