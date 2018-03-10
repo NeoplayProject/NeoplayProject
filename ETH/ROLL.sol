@@ -144,8 +144,8 @@ contract NeoPlay is owned, TokenERC20 {
     function mintToken(address target, uint256 mintedAmount) onlyOwner public {
         balanceOf[target] += mintedAmount;
         totalSupply += mintedAmount;
-        emit Transfer(0, this, mintedAmount);
-        emit Transfer(this, target, mintedAmount);
+        emit Transfer(0, owner, mintedAmount);
+        emit Transfer(owner, target, mintedAmount);
     }
 
     function freezeAccount(address target, bool freeze) onlyOwner public {
@@ -160,12 +160,12 @@ contract NeoPlay is owned, TokenERC20 {
 
     function buy() payable public {
         uint amount = msg.value / buyPrice;
-        _transfer(this, msg.sender, amount);
+        _transfer(owner, msg.sender, amount);
     }
 
     function sell(uint256 amount) public {
-        require(this.balance >= amount * sellPrice);
-        _transfer(msg.sender, this, amount);
+        require(owner.balance >= amount * sellPrice);
+        _transfer(msg.sender, owner, amount);
         msg.sender.transfer(amount * sellPrice);
     }
 }
