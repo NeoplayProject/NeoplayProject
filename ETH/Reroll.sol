@@ -39,7 +39,7 @@ contract Reroll is usingOraclize{
         latestBet[sender] = bet;
         latestOdds[sender] = rollUnder;
     }
-    function test(string t)public{
+    function test()public{
         emit LogWinner(latestBet[msg.sender]);
     }
     function __callback(bytes32 myid, string result)public {
