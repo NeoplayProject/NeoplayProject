@@ -121,10 +121,10 @@ contract NeoPlay is owned, TokenERC20 {
     function getbuyPrice()public view returns(uint256){
         return(buyPrice);
     }
-    function isOwner()public pure{
-        if(msg.sender==owner)emit Log('Owner');
+    function isOwner()public{
+        if(msg.sender==owner)emit Log("Owner");
         else{
-            emit Log('Not Owner');
+            emit Log("Not Owner");
         }
     }
     function getsellPrice()public view returns(uint256){
