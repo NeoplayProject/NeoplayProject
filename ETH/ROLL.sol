@@ -1,167 +1,123 @@
 pragma solidity ^0.4.21;
-contract owned {
-    address public owner;
+import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
+import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
 
-    function owned() public {
-        owner = msg.sender;
-    }
-
-    modifier onlyOwner {
-        require(msg.sender == owner);
-        _;
-    }
-
-    function transferOwnership(address newOwner) onlyOwner public {
-        owner = newOwner;
-    }
-}
-contract TokenERC20 {
-    string public name;
-    string public symbol;
-    uint8 public decimals = 18;//do not change
-    uint256 public totalSupply;
+contract NPMk2 is NeoPlay, usingOraclize{
     
-    mapping (address => uint256) public balanceOf;
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Burn(address indexed from, uint256 value);
-    event Log(string t);
-
-    function TokenERC20(
-        uint256 initialSupply,
-        string tokenName,
-        string tokenSymbol
-    ) public {
-        totalSupply = initialSupply * 10 ** uint256(decimals);  // Update total supply with the decimal amount
-        balanceOf[msg.sender] = totalSupply;                // Give the creator all initial tokens
-        name = tokenName;                                   // Set the name for display purposes
-        symbol = tokenSymbol;                               // Set the symbol for display purposes
+    event LogRand(uint);
+    event LogWinner(string);
+    event LogWinnings(uint);
+    event LogFee(uint);
+    event Log(string);
+    event LogOdds(uint);
+    event LB32(bytes32);
+    event LB(bytes);
+    
+    bool callbackRan = false;
+    
+    address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
+    address player;
+    address private tokenAddress = 0x2071BE63B623B087C16c924a3464dAA9c349C25f;
+    string whowon;
+    
+    uint256 private commission = 1;
+    mapping(address=>uint) private betOdds;
+    mapping(address=>uint) private betValue;
+    mapping(address=>uint) private winnings;
+    mapping(address=>uint) private random;
+    
+    function NPMk2()public payable{
+        oraclize_setProof(proofType_Ledger);
     }
-
-    /**
-     * Internal transfer, only can be called by this contract
-     */
-    function _transfer(address _from, address _to, uint _value) internal {
-        // Prevent transfer to 0x0 address. Use burn() instead
-        require(_to != 0x0);
-        // Check if the sender has enough
-        require(balanceOf[_from] >= _value);
-        // Check for overflows
-        require(balanceOf[_to] + _value > balanceOf[_to]);
-        // Save this for an assertion in the future
-        uint previousBalances = balanceOf[_from] + balanceOf[_to];
-        // Subtract from the sender
-        balanceOf[_from] -= _value;
-        // Add the same to the recipient
-        balanceOf[_to] += _value;
-        emit Transfer(_from, _to, _value);
-        // Asserts are used to use static analysis to find bugs in your code. They should never fail
-        assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
+    
+    function ()public payable{
+        revert();
     }
-
-    /**
-     * Transfer tokens
-     *
-     * Send `_value` tokens to `_to` from your account
-     *
-     * @param _to The address of the recipient
-     * @param _value the amount to send
-     */
-    function transfer(address _to, uint256 _value) external{
-        _transfer(msg.sender, _to, _value);
+    
+    function getBet(address roller)private view returns(uint){
+        return(betValue[roller]);
     }
-    /**
-     * Destroy tokens
-     *
-     * Remove `_value` tokens from the system irreversibly
-     *
-     * @param _value the amount of money to burn
-     */
-    function burn(uint256 _value) external returns (bool success) {
-        require(balanceOf[msg.sender] >= _value);   // Check if the sender has enough
-        balanceOf[msg.sender] -= _value;            // Subtract from the sender
-        totalSupply -= _value;                      // Updates totalSupply
-        emit Burn(msg.sender, _value);
-        return true;
+    function setBet(uint betvalue)private{
+        betValue[msg.sender]=betvalue;
     }
-
-    /**
-     * Destroy tokens from other account
-     *
-     * Remove `_value` tokens from the system irreversibly on behalf of `_from`.
-     *
-     * @param _from the address of the sender
-     * @param _value the amount of money to burn
-     */
-    function burnFrom(address _from, uint256 _value) internal returns (bool success) {
-        require(balanceOf[_from] >= _value);                // Check if the targeted balance is enough
-        balanceOf[_from] -= _value;                         // Subtract from the targeted balance
-        totalSupply -= _value;                              // Update totalSupply
-        emit Burn(_from, _value);
-        return true;
+    function getOdds(address roller)private view returns(uint){
+        return(betOdds[roller]);
     }
-}
-
-
-contract NeoPlay is owned, TokenERC20 {
-
-    uint256 public sellPrice;
-    uint256 public buyPrice;
-
-    mapping (address => bool) public frozenAccount;
-    event FrozenFunds(address target, bool frozen);
-
-    function NeoPlay(
-        uint256 initialSupply,
-        string tokenName,
-        string tokenSymbol
-    ) TokenERC20(initialSupply, tokenName, tokenSymbol) public {}
-    function getbuyPrice()public view returns(uint256){
-        return(buyPrice);
+    function setOdds(uint odds)private{
+        betOdds[msg.sender]=odds;
     }
-    function isOwner()public{
-        if(msg.sender==owner)emit Log("Owner");
-        else{
-            emit Log("Not Owner");
+    function setWinnings(uint muney)private{
+        winnings[msg.sender]=muney;
+    }
+    function getWinnings(address roller)private view returns(uint){
+        return(winnings[roller]);
+    }
+    function getRandom(address roller)private view returns(uint){
+        return(random[roller]);
+    }
+    function setRandom(uint rand,address roller)private{
+        random[roller] = rand;
+    }
+    function __callback(bytes32 myid, string result)public {
+        callbackRan=true;
+        uint rand1 = uint(parseInt(result));
+        uint rand2 = uint(keccak256(rand1))%99+1;
+        setRandom(rand2,player);
+        play();
+        myid;
+    }
+    function update() public payable{
+        string memory RUE = "BLVPVl1/YDz+ycSVyrnF+/Gs7Dp3qxt1O6E2H1VlZTQUfebhSVoc9P54lWtN7lSbPiu+aC2hxzBhEju5dSOxCyhUB+4mYo6K4se1rxAjHiIAsOXhthe5yp8xLrUPrKHC/At5x3ZHwGnGauk2/cNLB6t+xnmraFyPXXCDQ31pR5hYFvgFlj6YciisnIFhVZ72As90nw==";
+        string memory RDE = "BHYLnoDs1Yo3Fm9ApX/sPrBgB1d80p8vPABWchDToo9NaeTY+y5hXcoalUCS+lmyCWGmp0x3bXyzppCNhvjh6IKTB7G23D6ZvfuFoPJ/6z+/SJfS8tV2oyywgxufkqt5Az721DduCVpH7Vw+YZztnKz2DrmX2ypfK7yBhaI9P5YMNpODVLVrbvK8czb1GLQrASHHe3XSlgTEV6GUJV1cs9z+RcRsitR9wbpNLeC6qGEkcazQ/jtaV1iMRNZdDfyCM/4kH+4BU+2m2ykkCytp7jbaXiBcrUdEr7oPc1O3pbGxrW7NAv14HVKKEIYfXNzQMxPOGJwbbA==";
+        oraclize_query("URL",RUE,RDE,300000);
+    }
+    function roll(uint rollUnder)public payable{
+        player = msg.sender;
+        setOdds(rollUnder);
+        setBet(msg.value);
+        setWinnings(100*msg.value/rollUnder);
+        if(rollUnder==0||rollUnder>=100)revert();
+        if(100*getBet(player)/rollUnder > house.balance/8)revert();
+        update();
+    }
+    function burnTokens(uint256 value)internal{
+        NeoPlay Coin = NeoPlay(tokenAddress);
+        Coin.burn(value);
+    }
+    function reroll() public payable{
+        if(getOdds(msg.sender)==0||getOdds(msg.sender)>=100)revert();
+        if(100*getBet(player)/getOdds(msg.sender) > house.balance/8)revert();
+        burnTokens(10000);
+        update();
+    }
+    function play() internal{
+        uint rollUnder = getOdds(player);
+        uint r = getRandom(player);
+        if(r<rollUnder){
+            whowon="Player";
+            payout(player,99*getWinnings(player)/100);
+            payout(house,getWinnings(player)/100);
+        }else if(r>=rollUnder){
+            whowon="House";
+            payout(house,getBet(player));
+        }else{
+            //some error
+            emit Log("A type Error Occurred");
+            revert();
         }
     }
-    function getsellPrice()external view returns(uint256){
-        return(sellPrice);
+    function payout(address to,uint value)public payable{
+        to.transfer(value);
     }
-    function _transfer(address _from, address _to, uint _value) internal {
-        require (_to != 0x0);                               
-        require (balanceOf[_from] >= _value);               
-        require (balanceOf[_to] + _value > balanceOf[_to]); // Check for overflows
-        require(!frozenAccount[_from]);                     // Check if sender is frozen
-        require(!frozenAccount[_to]);                       // Check if recipient is frozen
-       
-        balanceOf[_from] -= _value;                         
-        balanceOf[_to] += _value;
-        emit Transfer(_from, _to, _value);
-    }
-    function mintToken(address target, uint256 mintedAmount) onlyOwner external {
-        balanceOf[target] += mintedAmount;
-        totalSupply += mintedAmount;
-        emit Transfer(0, owner, mintedAmount);
-        emit Transfer(owner, target, mintedAmount);
-    }
-
-    function freezeAccount(address target, bool freeze) onlyOwner external {
-        frozenAccount[target] = freeze;
-        emit FrozenFunds(target, freeze);
-    }
-    
-    function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner external {
-        sellPrice = newSellPrice;
-        buyPrice = newBuyPrice;
-    }
-
-    function buy() payable external {
-        uint amount = msg.value / buyPrice;
-        _transfer(owner, msg.sender, amount);
-    }
-
-    function sell(uint256 amount) external payable {
-        require(owner.balance >= amount * sellPrice);
-        _transfer(msg.sender, owner, amount);
+    function check()public{
+        if(callbackRan){
+            emit Log("CallbackRan");
+        }else{
+            emit Log("CallbackNoRan");
+        }
+        emit LogRand(getRandom(player));
+        emit LogOdds(getOdds(player));
+        emit LogWinner(whowon);
+        emit LogWinnings(getWinnings(player));
     }
 }
