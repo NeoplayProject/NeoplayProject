@@ -79,8 +79,6 @@ contract NPMk2 is usingOraclize{
     function play() internal{
         uint rollUnder = getOdds(player);
         uint r = getRandom(player);
-        test_r=r;
-        test_RU=rollUnder;
         if(r<rollUnder){
             whowon="Player";
             payout(player,99*getWinnings(player)/100);
