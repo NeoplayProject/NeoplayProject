@@ -1,4 +1,4 @@
-pragma solidity ^0.4.20;
+pragma solidity ^0.4.21;
 contract owned {
     address public owner;
 
@@ -69,7 +69,7 @@ contract TokenERC20 {
      * @param _to The address of the recipient
      * @param _value the amount to send
      */
-    function transfer(address _to, uint256 _value) public {
+    function transfer(address _to, uint256 _value) external{
         _transfer(msg.sender, _to, _value);
     }
     /**
@@ -79,7 +79,7 @@ contract TokenERC20 {
      *
      * @param _value the amount of money to burn
      */
-    function burn(uint256 _value) public returns (bool success) {
+    function burn(uint256 _value) external returns (bool success) {
         require(balanceOf[msg.sender] >= _value);   // Check if the sender has enough
         balanceOf[msg.sender] -= _value;            // Subtract from the sender
         totalSupply -= _value;                      // Updates totalSupply
@@ -95,7 +95,7 @@ contract TokenERC20 {
      * @param _from the address of the sender
      * @param _value the amount of money to burn
      */
-    function burnFrom(address _from, uint256 _value) public returns (bool success) {
+    function burnFrom(address _from, uint256 _value) internal returns (bool success) {
         require(balanceOf[_from] >= _value);                // Check if the targeted balance is enough
         balanceOf[_from] -= _value;                         // Subtract from the targeted balance
         totalSupply -= _value;                              // Update totalSupply
@@ -127,7 +127,7 @@ contract NeoPlay is owned, TokenERC20 {
             emit Log("Not Owner");
         }
     }
-    function getsellPrice()public view returns(uint256){
+    function getsellPrice()external view returns(uint256){
         return(sellPrice);
     }
     function _transfer(address _from, address _to, uint _value) internal {
@@ -141,31 +141,30 @@ contract NeoPlay is owned, TokenERC20 {
         balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
     }
-    function mintToken(address target, uint256 mintedAmount) onlyOwner public {
+    function mintToken(address target, uint256 mintedAmount) onlyOwner external {
         balanceOf[target] += mintedAmount;
         totalSupply += mintedAmount;
         emit Transfer(0, owner, mintedAmount);
         emit Transfer(owner, target, mintedAmount);
     }
 
-    function freezeAccount(address target, bool freeze) onlyOwner public {
+    function freezeAccount(address target, bool freeze) onlyOwner external {
         frozenAccount[target] = freeze;
         emit FrozenFunds(target, freeze);
     }
     
-    function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner public {
+    function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner external {
         sellPrice = newSellPrice;
         buyPrice = newBuyPrice;
     }
 
-    function buy() payable public {
+    function buy() payable external {
         uint amount = msg.value / buyPrice;
         _transfer(owner, msg.sender, amount);
     }
 
-    function sell(uint256 amount) public {
+    function sell(uint256 amount) external payable {
         require(owner.balance >= amount * sellPrice);
         _transfer(msg.sender, owner, amount);
-        msg.sender.transfer(amount * sellPrice);
     }
 }
