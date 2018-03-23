@@ -1,7 +1,23 @@
-pragma solidity ^0.4.21;
-import "github.com/NEOPLAYdev/NEOPLAY/ETH/ROLL.sol";
+pragma solidity ^0.4.18;
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
-contract NPMk2 is usingOraclize{
+interface NP {function burnFromContract(address tokenHolder,uint256 value)external;}
+contract owned {
+    address public owner;
+
+    function owned() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function transferOwnership(address newOwner) onlyOwner public {
+        owner = newOwner;
+    }
+}
+contract NPMk2 is usingOraclize,owned{
     
     event LogRand(uint);
     event LogWinner(string);
@@ -14,11 +30,11 @@ contract NPMk2 is usingOraclize{
     
     bool callbackRan = false;
     
-    address house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
-    address player;
-    //address private tokenAddress = 0xa5b0345BABA9E7C8188e7378adfbd4Ca46c1303c;
+    address private house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
+    address private token = 0xE3761CEb14DF16E0cA7E7dA4a0687f4E9d9aDe3f;
+    address private player;
     string whowon;
-    //NeoPlay Coin = NeoPlay(tokenAddress);
+    uint RAND;
     uint256 private commission = 1;
     mapping(address=>uint) private betOdds;
     mapping(address=>uint) private betValue;
@@ -29,7 +45,6 @@ contract NPMk2 is usingOraclize{
     }
     
     function ()public payable{}
-    
     function getBet(address roller)private view returns(uint){
         return(betValue[roller]);
     }
@@ -54,11 +69,19 @@ contract NPMk2 is usingOraclize{
     function setRandom(uint rand,address roller)private{
         random[roller] = rand;
     }
+    function setToken(address tokenAddress)public onlyOwner{
+        token = tokenAddress;
+    }
+    function getToken()public view returns(address){
+        return(token);
+    }
     function __callback(bytes32 myid, string result)public {
+        if(msg.sender != oraclize_cbAddress()){revert();}
         callbackRan=true;
         uint rand1 = uint(parseInt(result));
         uint rand2 = uint(keccak256(rand1))%99+1;
         setRandom(rand2,player);
+        RAND = rand2;
         play();
         myid;
     }
@@ -74,6 +97,12 @@ contract NPMk2 is usingOraclize{
         setWinnings(100*msg.value/rollUnder);
         if(rollUnder==0||rollUnder>=100)revert();
         if(100*getBet(player)/rollUnder > house.balance/8)revert();
+        update();
+    }
+    function reroll() public payable{
+        address tokenAddy = getToken();
+        NP coin = NP(tokenAddy);
+        coin.burnFromContract(msg.sender,1000);
         update();
     }
     function play() internal{
@@ -101,7 +130,7 @@ contract NPMk2 is usingOraclize{
         }else{
             emit Log("CallbackNoRan");
         }
-        emit LogRand(getRandom(player));
+        emit LogRand(RAND);
         emit LogOdds(getOdds(player));
         emit LogWinner(whowon);
         emit LogWinnings(getWinnings(player));
