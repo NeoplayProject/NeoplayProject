@@ -1,5 +1,6 @@
 pragma solidity ^0.4.21;
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
+import "github.com/Arachnid/solidity-stringutils/src/strings.sol";
 
 contract owned {
     address public owner;
@@ -29,6 +30,7 @@ contract TokenERC20{
     event Burn(address indexed from, uint256 value);
     event Log(string t);
     event Log32(bytes32);
+    event LogA(address);
 
     function TokenERC20(
         uint256 initialSupply,
@@ -50,81 +52,95 @@ contract TokenERC20{
         emit Transfer(_from, _to, _value);
         assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
     }
-    function transfer(address _to, uint256 _value) external{
-        _transfer(msg.sender, _to, _value);
-    }
-    function burn(uint256 _value) external returns (bool success) {
-        require(balanceOf[msg.sender] >= _value);
-        balanceOf[msg.sender] -= _value;
-        totalSupply -= _value;
-        emit Burn(msg.sender, _value);
-        return true;
-    }
-    function burnFrom(address _from, uint256 _value) internal returns (bool success) {
-        require(balanceOf[_from] >= _value);
-        balanceOf[_from] -= _value;
-        totalSupply -= _value;
-        emit Burn(_from, _value);
-        return true;
-    }
 }
 contract NP is owned, TokenERC20, usingOraclize {
+    using strings for *;
     struct request {
         address from;
         address to;
         uint256 action;
         uint256 value;
     }
-
     uint256 public sellPrice;
     uint256 public buyPrice;
     address private GameContract;
     
     string private XBSQueryURL;
-    string private XBSQueryDATA;
-    string private key = "c984bb84715718f37a76f5e3de35d20ac9e92f9a57c07e398dc28146d8cdb183";
+    address cb;
     
-    uint confirm1;
+    uint256  private activeUsers;
     mapping (address => string) private linkedAccount;
-    mapping (address => uint256) public NeoOwed;
+    mapping (address => uint256) public NeoBalance;
     mapping (address => bool) public frozenAccount;
     mapping (address => request) public activeRequests;
-    mapping (bytes32 => address) public toAddress;
+    mapping (address=>bool) public isRegistered;
+    mapping (address => uint256) public accountID;
+    mapping (uint256 => address) public accountFromID;
     event FrozenFunds(address target, bool frozen);
-
+    
+    bool callbackran=false;
+    
     function NP(
         uint256 initialSupply,
         string tokenName,
         string tokenSymbol
     )TokenERC20(initialSupply, tokenName, tokenSymbol) public payable{
         //oraclize_setProof(proofType_TLSNotary);
+        activeUsers=0;
+    }
+//-------------------------------------------MODIFIERS-------------------------------------------------------//
+    modifier registered {
+        require(isRegistered[msg.sender]);
+        _;
     }
 //--------------------------------------TYPECAST FUNCTIONS---------------------------------------------------//
-    function toString(address x)public pure returns (string) {
-        bytes memory b = new bytes(20);
-        for (uint i = 0; i < 20; i++)
-            b[i] = byte(uint8(uint(x) / (2**(8*(19 - i)))));
-        return string(b);
+    function uintToString(uint256 v)public constant returns (string str) {
+        uint maxlength = 100;
+        bytes memory reversed = new bytes(maxlength);
+        uint i = 0;
+        while (v != 0) {
+            uint256 remainder = v % 10;
+            v = v / 10;
+            reversed[i++] = byte(48 + remainder);
+        }
+        bytes memory s = new bytes(i + 1);
+        for (uint j = 0; j <= i; j++) {
+            s[j] = reversed[i - j];
+        }
+        str = string(s);
     }
-    function uintToString (uint dta)public pure returns (string) {
-        bytes32 data = bytes32(dta);
-        bytes memory bytesString = new bytes(32);
-        for (uint j=0; j<32; j++) {
-            byte char = byte(bytes32(uint(data) * 2 ** (8 * j)));
-            if (char != 0) {
-                bytesString[j] = char;
+    function appendUintToString(string inStr, uint v)public constant returns (string str) {
+        uint maxlength = 100;
+        bytes memory reversed = new bytes(maxlength);
+        uint i = 0;
+        while (v != 0) {
+            uint remainder = v % 10;
+            v = v / 10;
+            reversed[i++] = byte(48 + remainder);
+        }
+        bytes memory inStrb = bytes(inStr);
+        bytes memory s = new bytes(inStrb.length + i);
+        uint j;
+        for (j = 0; j < inStrb.length; j++) {
+            s[j] = inStrb[j];
+        }
+        for (j = 0; j < i; j++) {
+            s[j + inStrb.length] = reversed[i - 1 - j];
+        }
+        str = string(s);
+    }
+    function makeXID(uint v)private constant returns (string str){
+        str = appendUintToString("XID",v);
+    }
+    function stringToUint(string s)public constant returns (uint256 result) {
+        bytes memory b = bytes(s);
+        uint256 i;
+        result = 0;
+        for (i = 0; i < b.length; i++) {
+            uint256 c = uint256(b[i]);
+            if (c >= 48 && c <= 57) {
+                result = result * 10 + (c - 48);
             }
-        }
-        return string(bytesString);
-    }
-    function stringToBytes32(string memory source)public pure returns (bytes32 result) {
-        bytes memory tempEmptyStringTest = bytes(source);
-        if (tempEmptyStringTest.length == 0) {
-            return 0x0;
-        }
-    
-        assembly {
-            result := mload(add(source, 32))
         }
     }
 //--------------------------------------ACCESSOR FUNCTIONS--------------------------------------------------//
@@ -137,16 +153,8 @@ contract NP is owned, TokenERC20, usingOraclize {
         else{
             emit Log("Not Owner");
         }
-    }function getXQD()public view returns(string){
-        return(XBSQueryDATA);
     }
-    function getXQDfromOutside()external view returns(string){
-        return(XBSQueryDATA);
-    }
-    function getXQUfromOutside()external view returns(string){
-        return(XBSQueryURL);
-    }
-    function getXQU()public view returns(string){
+    function getXQU()internal view returns(string){
         return(XBSQueryURL);
     }
     function getGC()external view returns(address){
@@ -167,9 +175,6 @@ contract NP is owned, TokenERC20, usingOraclize {
     function setXQU(string newQU) onlyOwner public{
         XBSQueryURL=newQU;
     }
-    function setXQD(string newQD) onlyOwner public{
-        XBSQueryDATA=newQD;
-    }
     
 //----------------------------------------TRANSFER FUNCTIONS------------------------------------------//
 
@@ -177,32 +182,16 @@ contract NP is owned, TokenERC20, usingOraclize {
         require (_to != 0x0);                               
         require (balanceOf[_from] >= _value);               
         require (balanceOf[_to] + _value > balanceOf[_to]);
+        require (NeoBalance[_from] >= _value);               
+        require (NeoBalance[_to] + _value > NeoBalance[_to]);
         require(!frozenAccount[_from]);
         require(!frozenAccount[_to]);
-       
+        
+        NeoBalance[_from] -=_value;
+        NeoBalance[_from] += _value;
         balanceOf[_from] -= _value;                         
         balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
-    }
-    //These are simply to trasnfer owed Neo
-    //All values are to become 0 upon the neo creation
-    function _transferNeo(address _from, address _to,uint _value) internal {
-        require (_to != 0x0);
-        require (NeoOwed[_from] >= _value);               
-        require (NeoOwed[_to] + _value > NeoOwed[_to]);
-        require(!frozenAccount[_from]);
-        require(!frozenAccount[_to]);
-       
-        NeoOwed[_from] -= _value;                         
-        NeoOwed[_to] += _value;
-        emit TransferNeo(_from, _to, _value);
-    }
-    function transferNeo(address to,uint256 value)external{
-        _transferNeo(msg.sender,to,value);
-    }
-    function transferBoth(address to,uint256 value)external{
-        _transfer(msg.sender,to,value);
-        _transferNeo(msg.sender,to,value);
     }
     function buy() payable external {
         uint amount = msg.value / buyPrice;
@@ -226,9 +215,12 @@ contract NP is owned, TokenERC20, usingOraclize {
         emit FrozenFunds(target, freeze);
     }
 
-    function burnFromContract(address tokenHolder,uint256 value)external{
-        require(msg.sender == GameContract);
-        burnFrom(tokenHolder,value);
+    function burnFrom(address _from, uint256 _value) internal returns (bool success) {
+        require(balanceOf[_from] >= _value);
+        balanceOf[_from] -= _value;
+        totalSupply -= _value;
+        emit Burn(_from, _value);
+        return true;
     }
 //-------------------------------------------SISTER TOKEN FUNCTIONS-------------------------------------//
     function confirmRequest(address requestor)internal{
@@ -239,27 +231,80 @@ contract NP is owned, TokenERC20, usingOraclize {
                 _transfer(requestor,r.to,r.value);
             }else if(r.action==2){
                 burnFrom(requestor,r.value);
-            }else{
+            }else if(r.action==3){
+                if(!isRegistered[requestor]){
+                    isRegistered[requestor]=true;
+                    accountID[requestor] = r.value;
+                    accountFromID[r.value] = requestor;
+                }
+            }
+            else{
                 revert();
             }
         }
         activeRequests[requestor].action=0;
     }
-    function registerData(address from, address to, uint256 action,uint256 value)external {
+    function registerData(address from, address to, uint256 action,uint256 value)internal {
         request memory r = request(from,to,action,value);
         activeRequests[msg.sender] = r;
-        string memory data = strConcat(strConcat("{from:",toString(from),",to:",toString(to)),strConcat(",action:",uintToString(action),",value:",uintToString(value)),"}");
-        //sendXBS(data);
     }
-    function sendXBS(string data)internal{
+    function sendXBS(string from,string to,string action,string value)public{
         string memory url = getXQU();
-        oraclize_query("URL",url,data);
+        oraclize_query("URL",url,
+            strConcat(
+                strConcat(
+                    "{\"from\":\"",
+                    from,
+                    "\",\"to\":\"",
+                    to
+                    ),
+                strConcat(
+                    "\",\"action\":\"",
+                    action,
+                    "\",\"value\":\"",
+                    value
+                    ),
+                "\"}"
+                )
+            );
     }
-    function __callback(bytes32 myid, string result,bytes32 proof)public {
+    function __callback(bytes32 myid, string result)public {
         if(msg.sender != oraclize_cbAddress())revert();
-        confirmRequest(toAddress[stringToBytes32(result)]);
-        emit Log32(myid);
-        emit Log32(proof);
-        
+        strings.slice memory id = (result.toSlice()).beyond("XID".toSlice());
+        uint256 I = stringToUint(id.toString());
+        confirmRequest(accountFromID[I]);
+        callbackran=true;
+        cb = accountFromID[I];
+        myid;
+    }
+    function check() public{
+        if(callbackran){
+            emit Log("CallbackRan");
+            emit LogA(cb);
+        }else{
+            emit Log("CallbackNoRan");
+        }
+    }
+    function sendRequest(address _from,address _to,uint256 _action,uint256 _value)internal registered{
+        registerData(_from,_to,_action,_value);
+        string memory from = makeXID(accountID[_from]);
+        string memory to = makeXID(accountID[_to]);
+        string memory action = uintToString(_action);
+        string memory value = uintToString(_value);
+        sendXBS(from,to,action,value);
+        emit Log("Request Logged");
+        emit Log(from);//logs the requestor
+    }
+    function burn(uint256 value)external registered{
+        sendRequest(msg.sender,0x0,2,value);
+    }
+    function transfer(address to,uint256 value)external registered{
+        sendRequest(msg.sender,to,1,value);
+    }
+    function registerAccount()external {
+        if(!isRegistered[msg.sender]){
+            activeUsers+=1;
+            sendRequest(msg.sender,0x0,3,activeUsers);
+        }
     }
 }
