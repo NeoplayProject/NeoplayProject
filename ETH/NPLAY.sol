@@ -72,10 +72,10 @@ contract NP is owned, TokenERC20, usingOraclize {
     mapping (address => string) private linkedAccount;
     mapping (address => uint256) public NeoBalance;
     mapping (address => bool) public frozenAccount;
-    mapping (address => request) public activeRequests;
+    mapping (address => request) private activeRequests;
     mapping (address=>bool) public isRegistered;
-    mapping (address => uint256) public accountID;
-    mapping (uint256 => address) public accountFromID;
+    mapping (address => uint256) private accountID;
+    mapping (uint256 => address) private accountFromID;
     event FrozenFunds(address target, bool frozen);
     
     bool callbackran=false;
@@ -94,7 +94,7 @@ contract NP is owned, TokenERC20, usingOraclize {
         _;
     }
 //--------------------------------------TYPECAST FUNCTIONS---------------------------------------------------//
-    function uintToString(uint256 v)public constant returns (string str) {
+    function uintToString(uint256 v)public pure returns (string str) {
         uint maxlength = 100;
         bytes memory reversed = new bytes(maxlength);
         uint i = 0;
@@ -109,7 +109,7 @@ contract NP is owned, TokenERC20, usingOraclize {
         }
         str = string(s);
     }
-    function appendUintToString(string inStr, uint v)public constant returns (string str) {
+    function appendUintToString(string inStr, uint v)public pure returns (string str) {
         uint maxlength = 100;
         bytes memory reversed = new bytes(maxlength);
         uint i = 0;
@@ -129,10 +129,10 @@ contract NP is owned, TokenERC20, usingOraclize {
         }
         str = string(s);
     }
-    function makeXID(uint v)private constant returns (string str){
+    function makeXID(uint v)private pure returns (string str){
         str = appendUintToString("XID",v);
     }
-    function stringToUint(string s)public constant returns (uint256 result) {
+    function stringToUint(string s)public pure returns (uint256 result) {
         bytes memory b = bytes(s);
         uint256 i;
         result = 0;
@@ -285,7 +285,7 @@ contract NP is owned, TokenERC20, usingOraclize {
             emit Log("CallbackNoRan");
         }
     }
-    function sendRequest(address _from,address _to,uint256 _action,uint256 _value)internal registered{
+    function sendRequest(address _from,address _to,uint256 _action,uint256 _value)public registered{
         registerData(_from,_to,_action,_value);
         string memory from = makeXID(accountID[_from]);
         string memory to = makeXID(accountID[_to]);
