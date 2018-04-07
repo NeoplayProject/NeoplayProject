@@ -1,4 +1,4 @@
-# NeoPlay Development
+# Neoplay Development
 
 This repository contains all assets pertaining to the Neoplay project.
 Contents as of April 2018 include:
