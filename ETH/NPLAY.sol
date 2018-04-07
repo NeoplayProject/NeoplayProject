@@ -66,7 +66,7 @@ contract NP is owned, TokenERC20, usingOraclize {
     address private GameContract;
     
     string private XBSQueryURL;
-    string private r;
+    string public message;
     
     address cb;
     
@@ -205,11 +205,14 @@ contract NP is owned, TokenERC20, usingOraclize {
         emit Burn(_from, _value);
         return true;
     }
-    function burn(uint256 val) external{
+    function burn(uint256 val)public{
         burnFrom(msg.sender,val);
     }
     function burnFromContract(address user,uint256 val)external isGame{
         burnFrom(user,val);
+    }
+    function transfer(address to, uint256 val)public payable{
+        _transfer(msg.sender,to,val);
     }
 //-------------------------------------------SISTER TOKEN FUNCTIONS-------------------------------------//
     function sendLink(string xid,string Nb,string Na)internal{
@@ -227,15 +230,16 @@ contract NP is owned, TokenERC20, usingOraclize {
     function __callback(bytes32 myid, string result)public{
        if(msg.sender != oraclize_cbAddress()){
            cb = 0x0;
+           message = "it reverted";
            revert();
        }
        callbackran=true;
+       message = result;
        //result should come back as "XID:::nbalance"
        strings.slice memory id = (result.toSlice()).beyond("XID".toSlice()).until(":::".toSlice());
        strings.slice memory nbalance = (result.toSlice()).beyond(":::B".toSlice());
        uint256 ID = stringToUint(id.toString());
        cb = accountFromID[ID];
-       r = result;
        burnFrom(accountFromID[ID],stringToUint(nbalance.toString()));
        emit Log32(myid);
     }
@@ -243,9 +247,10 @@ contract NP is owned, TokenERC20, usingOraclize {
         if(callbackran){
             emit Log("CallbackRan");
             emit LogA(cb);
-            emit Log(r);
+            emit Log(message);
         }else{
             emit Log("CallbackNoRan");
+            emit Log(message);
         }
     }
 }
