@@ -1,6 +1,6 @@
 # Neoplay Development
 
-This repository contains all assets pertaining to the Neoplay project.
+This repository contains all assets pertaining to the Neoplay project.\n
 Contents as of April 2018 include:
 * Eth: All contracts used on the Ethereum Blockchain including
   * NPLAY: token for transformable NPLAY tokens
