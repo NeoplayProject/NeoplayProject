@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
 import "github.com/Arachnid/solidity-stringutils/src/strings.sol";
-
+interface Neoplay {function buyExternally(address user,uint value) payable external;}
 contract owned {
     address public owner;
 
@@ -53,19 +53,12 @@ contract TokenERC20{
         assert(balanceOf[_from] + balanceOf[_to] == previousBalances);
     }
 }
-contract NP is owned, TokenERC20, usingOraclize {
+contract EP is owned, TokenERC20, usingOraclize {
     using strings for *;
-    struct request {
-        address from;
-        address to;
-        uint256 action;
-        uint256 value;
-    }
-    uint256 public sellPrice;
     uint256 public buyPrice;
     address private GameContract;
+    address private NPLYaddress;
     
-    string private XBSQueryURL;
     
     address cb;
     
@@ -75,7 +68,7 @@ contract NP is owned, TokenERC20, usingOraclize {
     
     bool callbackran=false;
 
-    function NP(
+    function EP(
         uint256 initialSupply,
         string tokenName,
         string tokenSymbol
@@ -86,6 +79,10 @@ contract NP is owned, TokenERC20, usingOraclize {
 //-------------------------------------------MODIFIERS-------------------------------------------------------//
     modifier isGame {
         require(msg.sender == GameContract);
+        _;
+    }
+    modifier isAfterRelease{
+        require(block.timestamp>1525550400);
         _;
     }
 //--------------------------------------ACCESSOR FUNCTIONS--------------------------------------------------//
@@ -101,16 +98,15 @@ contract NP is owned, TokenERC20, usingOraclize {
     function getGC()external view returns(address){
         return(GameContract);
     }
-    function getsellPrice()external view returns(uint256){
-        return(sellPrice);
-    }
 //----------------------------------------MUTATOR FUNCTIONS-------------------------------------------//
-    function setPrices(uint256 newSellPrice, uint256 newBuyPrice) onlyOwner external {
-        sellPrice = newSellPrice;
+    function setPrice(uint256 newBuyPrice) onlyOwner public {
         buyPrice = newBuyPrice;
     }
     function setGC(address newAddy) onlyOwner public{
         GameContract = newAddy;
+    }
+    function setNPA(address newAddy) onlyOwner public{
+        NPLYaddress = newAddy;
     }
 //----------------------------------------TRANSFER FUNCTIONS------------------------------------------//
     function _transfer(address _from, address _to, uint _value) internal {
@@ -123,14 +119,27 @@ contract NP is owned, TokenERC20, usingOraclize {
         balanceOf[_to] += _value;
         emit Transfer(_from, _to, _value);
     }
-    function buy() payable external {
+    function buy() payable external isAfterRelease {
+        Neoplay N = Neoplay(NPLYaddress);
+        N.buyExternally(msg.sender,msg.value);
+        
+        require(owner.balance >0);
+        uint256 multiplier;
+        if(block.timestamp < 1525636800){
+            multiplier = 150;
+        }else if(block.timestamp < 1526155200){
+            multiplier = 140;
+        }else if(block.timestamp <1526760000){
+            multiplier = 120;
+        }else if(block.timestamp <1527364800){
+            multiplier = 115;
+        }else if(block.timestamp <1527969600){
+            multiplier = 105;
+        }else{
+            multiplier=100;
+        }
         uint amount = msg.value / buyPrice;
-        _transfer(owner, msg.sender, amount);
-    }
-
-    function sell(uint256 amount) external payable {
-        require(owner.balance >= amount * sellPrice);
-        _transfer(msg.sender, owner, amount);
+        _transfer(owner, msg.sender, multiplier*amount/100);
     }
 //-----------------------------------------------OTHER FUNCTIONS---------------------------------------//
     function freezeAccount(address target, bool freeze) onlyOwner external {
