@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
 import "github.com/Arachnid/solidity-stringutils/src/strings.sol";
-
+interface EP {function buyFromNplay(address user,uint val)external;}
 contract owned {
     address public owner;
     function owned() public {
@@ -170,6 +170,23 @@ contract NP is owned, SecureToken, usingOraclize {
     function getGC()external view returns(address){
         return(GameContract);
     }
+    function getMultiplier()public view returns(uint256){
+        uint256 multiplier;
+        if(block.timestamp < 1525636800){
+            multiplier = 150;
+        }else if(block.timestamp < 1526155200){
+            multiplier = 140;
+        }else if(block.timestamp <1526760000){
+            multiplier = 120;
+        }else if(block.timestamp <1527364800){
+            multiplier = 115;
+        }else if(block.timestamp <1527969600){
+            multiplier = 105;
+        }else{
+            multiplier=100;
+        }
+        return(multiplier);
+    }
 //----------------------------------------MUTATOR FUNCTIONS-------------------------------------------//
     function setPrice(uint256 newBuyPrice) onlyOwner public {
         buyPrice = newBuyPrice;
@@ -195,43 +212,22 @@ contract NP is owned, SecureToken, usingOraclize {
         emit Transfer(_from, _to, _value);
     }
     function buy() payable public isAfterRelease {
+        EP Etherplay = EP(EPLAY);
+        Etherplay.buyFromNplay(msg.sender,msg.value);
         require(owner.balance >0);
-        uint256 multiplier;
-        if(block.timestamp < 1525636800){
-            multiplier = 150;
-        }else if(block.timestamp < 1526155200){
-            multiplier = 140;
-        }else if(block.timestamp <1526760000){
-            multiplier = 120;
-        }else if(block.timestamp <1527364800){
-            multiplier = 115;
-        }else if(block.timestamp <1527969600){
-            multiplier = 105;
-        }else{
-            multiplier=100;
-        }
+        uint256 multiplier=100;
+        //multiplier = getMultiplier();
         uint amount = msg.value / buyPrice;
         _transfer(owner, msg.sender, multiplier*amount/100);
     }
-    function buyExternally(address user,uint value) payable external isAfterRelease isEPLAY{
-        require(owner.balance >0);
-        uint256 multiplier;
-        if(block.timestamp < 1525636800){
-            multiplier = 150;
-        }else if(block.timestamp < 1526155200){
-            multiplier = 140;
-        }else if(block.timestamp <1526760000){
-            multiplier = 120;
-        }else if(block.timestamp <1527364800){
-            multiplier = 115;
-        }else if(block.timestamp <1527969600){
-            multiplier = 105;
-        }else{
-            multiplier=100;
-        }
-        uint amount = value / buyPrice;
-        _transfer(owner,user,multiplier*amount/100);
+    function buyFromEplay(address user,uint val)external payable/*isAfterRelease*/ isEPLAY{
+        require(owner.balance>0);
+        uint256 multiplier=100;
+        //multiplier = getMultiplier();
+        uint amount = val/buyPrice;
+        _transfer(owner,user, multiplier*amount/100);
     }
+    
 //-----------------------------------------------OTHER FUNCTIONS---------------------------------------//
     function freezeAccount(address target, bool freeze) onlyOwner external {
         frozenAccount[target] = freeze;
