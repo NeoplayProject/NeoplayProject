@@ -1,7 +1,7 @@
 pragma solidity ^0.4.21;
 import "github.com/oraclize/ethereum-api/oraclizeAPI_0.5.sol";
 import "github.com/Arachnid/solidity-stringutils/src/strings.sol";
-interface Neoplay {function buyExternally(address user,uint value) payable external;}
+interface NP {function buyFromEplay(address user,uint val)external;}
 contract owned {
     address public owner;
 
@@ -57,7 +57,7 @@ contract EP is owned, TokenERC20, usingOraclize {
     using strings for *;
     uint256 public buyPrice;
     address private GameContract;
-    address private NPLYaddress;
+    address private NPLAY;
     
     
     address cb;
@@ -85,6 +85,10 @@ contract EP is owned, TokenERC20, usingOraclize {
         require(block.timestamp>1525550400);
         _;
     }
+    modifier isNPLAY {
+        require(msg.sender == NPLAY);
+        _;
+    }
 //--------------------------------------ACCESSOR FUNCTIONS--------------------------------------------------//
     function getbuyPrice()public view returns(uint256){
         return(buyPrice);
@@ -98,32 +102,7 @@ contract EP is owned, TokenERC20, usingOraclize {
     function getGC()external view returns(address){
         return(GameContract);
     }
-//----------------------------------------MUTATOR FUNCTIONS-------------------------------------------//
-    function setPrice(uint256 newBuyPrice) onlyOwner public {
-        buyPrice = newBuyPrice;
-    }
-    function setGC(address newAddy) onlyOwner public{
-        GameContract = newAddy;
-    }
-    function setNPA(address newAddy) onlyOwner public{
-        NPLYaddress = newAddy;
-    }
-//----------------------------------------TRANSFER FUNCTIONS------------------------------------------//
-    function _transfer(address _from, address _to, uint _value) internal {
-        require (_to != 0x0);                               
-        require (balanceOf[_from] >= _value);               
-        require (balanceOf[_to] + _value > balanceOf[_to]);
-        require(!frozenAccount[_from]);
-        require(!frozenAccount[_to]);
-        balanceOf[_from] -= _value;                         
-        balanceOf[_to] += _value;
-        emit Transfer(_from, _to, _value);
-    }
-    function buy() payable external isAfterRelease {
-        Neoplay N = Neoplay(NPLYaddress);
-        N.buyExternally(msg.sender,msg.value);
-        
-        require(owner.balance >0);
+    function getMultiplier()public view returns(uint256){
         uint256 multiplier;
         if(block.timestamp < 1525636800){
             multiplier = 150;
@@ -138,8 +117,43 @@ contract EP is owned, TokenERC20, usingOraclize {
         }else{
             multiplier=100;
         }
+        return(multiplier);
+    }
+//----------------------------------------MUTATOR FUNCTIONS-------------------------------------------//
+    function setPrice(uint256 newBuyPrice) onlyOwner public {
+        buyPrice = newBuyPrice;
+    }
+    function setGC(address newAddy) onlyOwner public{
+        GameContract = newAddy;
+    }
+    function setNPA(address newAddy) onlyOwner public{
+        NPLAY = newAddy;
+    }
+//----------------------------------------TRANSFER FUNCTIONS------------------------------------------//
+    function _transfer(address _from, address _to, uint _value) internal {
+        require (_to != 0x0);                               
+        require (balanceOf[_from] >= _value);               
+        require (balanceOf[_to] + _value > balanceOf[_to]);
+        require(!frozenAccount[_from]);
+        require(!frozenAccount[_to]);
+        balanceOf[_from] -= _value;                         
+        balanceOf[_to] += _value;
+        emit Transfer(_from, _to, _value);
+    }
+    function buy() payable external{// isAfterRelease {
+        NP Neoplay = NP(NPLAY);
+        Neoplay.buyFromEplay(msg.sender,msg.value);
+        //multiplier = getMultiplier();
+        uint multiplier = 100;
         uint amount = msg.value / buyPrice;
         _transfer(owner, msg.sender, multiplier*amount/100);
+    }
+    function buyFromNplay(address user,uint val) payable external /*isAfterRelease*/ isNPLAY{
+        require(owner.balance>0);
+        uint256 multiplier=100;
+        //multiplier = getMultiplier();
+        uint amount = val/buyPrice;
+        _transfer(owner,user, multiplier*amount/100);
     }
 //-----------------------------------------------OTHER FUNCTIONS---------------------------------------//
     function freezeAccount(address target, bool freeze) onlyOwner external {
