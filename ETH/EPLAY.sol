@@ -58,7 +58,7 @@ contract EP is owned, SecureToken, usingOraclize {
         }else if(block.timestamp < 1526155200){
             multiplier = 140;
         }else if(block.timestamp <1526760000){
-            multiplier = 120;
+            multiplier = 125;
         }else if(block.timestamp <1527364800){
             multiplier = 115;
         }else if(block.timestamp <1527969600){
