@@ -11,3 +11,5 @@ Contents as of April 2018 include:
 * Website: source code for all Neoplay domains
 
 Any questions or concerns please contact us at team@neoplay.io or on our [subreddit](http://www.reddit.com/r/NeoplayProject)
+
+Crowdsale Address : 0xe29fd18cb1715c51546ff8aeec73b3ea2459e121
