@@ -25,11 +25,10 @@ contract owned {
 contract Crowdsale is owned {
     address public Nplay;
     address public Eplay;
-    event Log(uint);
     function Crowdsale() public payable{
     }
     function () public payable{
-        revert();
+        buy();
     }
     function setEplay(address newSS)public onlyOwner{
         Eplay= newSS;
