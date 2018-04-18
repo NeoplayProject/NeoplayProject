@@ -1,5 +1,5 @@
 pragma solidity ^0.4.21;
-interface SisterToken {function _buy(address _for)external payable;function testConnection() external;function recieveValue()external payable returns(uint);}
+interface SisterToken {function _buy(address _for)external payable;function testConnection() external;}
 contract owned {
     address public owner;
     event Log(string s);
