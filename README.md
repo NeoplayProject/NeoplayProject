@@ -13,4 +13,4 @@ Contents as of April 2018 include:
 * Graphics: all images and animations used within the Neoplay documentation and websites
 * Website: source code for all Neoplay domains
 
-Any questions or concerns please contact us by [email](team@neoplay.io), [twitter](https://twitter.com/NeoplayProject) or on our [subreddit](http://www.reddit.com/r/NeoplayProject)
+Any questions or concerns please contact us by email at team@neoplay.io, on [twitter](https://twitter.com/NeoplayProject) or on our [subreddit](http://www.reddit.com/r/NeoplayProject)
