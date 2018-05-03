@@ -9,6 +9,7 @@ Contents as of April 2018 include:
   * EPLAY: token for non-transformable EPLAY tokens
   * NPMk2: Gaming Contract
   * SisterToken: the base class for EPLAY and NPLAY
+  * Verifier: contract used for verifying contributions in NEO
 * NEO : All contracts used on the NEO Blockchain (in development)
 * Graphics: all images and animations used within the Neoplay documentation and websites
 * Website: source code for all Neoplay domains
