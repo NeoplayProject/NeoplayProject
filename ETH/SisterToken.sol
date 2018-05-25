@@ -30,9 +30,17 @@ contract SisterToken is owned{
     
     uint256 private activeUsers;
     
-    address[9] phonebook = [0x3dc9E794EeA03FA621f071554D1781AD790aab37,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0];
-    address public sister;
-    
+    address[9] phonebook = [0x2c0cAC04A9Ffee0D496e45023c907b71049Ed0F0,
+                            0xcccC551e9701c2A5D07a3062a604972fa12226E8,
+                            0x97d1352b2A2E0175471Ca730Cb6510D0164bFb0B,
+                            0x80f395fd4E1dDE020d774faB983b8A9d0DCCA516,
+                            0xCeb646336bBA29A9E8106A44065561D495166230,
+                            0xDce66F4a697A88d00fBB3fDDC6D44FD757852394,
+                            0x8CCc39c1516EF25AC0E6bC1A6bb7cf159d28FD71,
+                            0xaF9cD61b3B5C4C07376141Ef8F718BB0893ab371,
+                            0x5A53D72E763b2D3e2f2f347ed774AAaE872861a4];
+    address bounty = 0xAB90CB176709558bA5D2DDA8aeb1F65e24f2409f;
+    address bank = owner;
     mapping (address => uint256) public balanceOf;
     mapping (address => uint256) public accountID;
     mapping (uint256 => address) public accountFromID;
@@ -68,7 +76,8 @@ contract SisterToken is owned{
         string tokenSymbol
     ) public payable{
         totalSupply = initialSupply * 10 ** uint256(decimals);
-        balanceOf[owner] = 9*totalSupply/10;
+        balanceOf[owner] = 85*totalSupply/100;
+        balanceOf[bounty] = 5*totalSupply/100;
         uint i;
         for(i=0;i<9;i++){
             balanceOf[phonebook[i]] = totalSupply/90;
@@ -110,10 +119,8 @@ contract SisterToken is owned{
     function setPrice(uint256 newBuyPrice) onlyOwner public {
         buyPrice = newBuyPrice;
     }
-    function setSister(address sibling)public onlyOwner{
-        sister = sibling;
-        trustContract(sibling);
-        emit LogA(sibling);
+    function changeBank(address newBank) onlyOwner public{
+        bank = newBank;
     }
 //-------------------------------------------------------------------INTERNAL FUNCTIONS--------------------------------------------------------------------------//
     function _transfer(address _from, address _to, uint _value) internal {
@@ -144,16 +151,13 @@ contract SisterToken is owned{
     function trasnferFromOwner(address to,uint value)internal {
         _transfer(owner,to,value);
     }
-    function givetoOwner()public payable{
-        owner.transfer(msg.value);
-    }
     function _buy(address user)external payable trusted isAfterRelease{
         require(owner.balance > 0);
         emit isTrusted(user,isTrusted[msg.sender]||msg.sender==user);
         uint256 amount = (getMultiplier()*2*msg.value/buyPrice)/100;
         emit Value(amount);
         trasnferFromOwner(user,amount);
-        owner.transfer(msg.value);
+        bank.transfer(msg.value);
     }
 //------------------------------------------------------------------EXTERNAL FUNCTIONS-------------------------------------------------------------------------//
     function registerExternal()external{
