@@ -18,7 +18,7 @@ contract owned {
         owner = newOwner;
     }
 }
-contract NPMk2 is usingOraclize,owned{
+contract NPMk3 is usingOraclize,owned{
 //-----------------------------------------------------------OBJECTS-----------------------------------------------------------//
     struct action{
         address player;
@@ -36,7 +36,7 @@ contract NPMk2 is usingOraclize,owned{
     event LogOdds(uint);
     event LB32(bytes32);
     event LB(bytes);
-//---------------------------------------------------------VARIABLE-------------------------------------------------------//    
+//---------------------------------------------------------VARIABLES-------------------------------------------------------//    
     address private house = 0xd315815ABB305200D9C98eDbE4c906b6E4cDCFE6;
     address private EPLAY;
     address private NPLAY;
@@ -47,10 +47,9 @@ contract NPMk2 is usingOraclize,owned{
     string private randomStore = "essketit";
     mapping(address=>action) private rolls;
 //---------------------------------------------------CONSTRUCTOR AND FALLBACK---------------------------------------------//
-    function NPMk2()public payable{
+    function NPMk3()public payable{
         //oraclize_setProof(proofType_Ledger);
     }
-    
     function ()public payable{}
 //-------------------------------------------------------------ACCESSORS-------------------------------------------------------//
     function getBet(address roller)private view returns(uint){
@@ -58,9 +57,6 @@ contract NPMk2 is usingOraclize,owned{
     }
     function getOdds(address roller)private view returns(uint){
         return(rolls[roller].odds);
-    }
-    function getSalt()public view returns(string){
-        return salt;
     }
     function getRandom(address roller)private view returns(uint){
         return(rolls[roller].random);
@@ -80,8 +76,8 @@ contract NPMk2 is usingOraclize,owned{
 
     }
     function setEPLAY(address tokenAddress)public onlyOwner{
-        EPLAY = tokenAddress;
-    }function setNPLAY(address tokenAddress)public onlyOwner{
+        EPLAY = tokenAddress;}
+    function setNPLAY(address tokenAddress)public onlyOwner{
         NPLAY = tokenAddress;
     }
     function setPlayKey(string newKey)public onlyOwner{
@@ -99,7 +95,7 @@ contract NPMk2 is usingOraclize,owned{
     function update() public payable{
         string memory RUE = "BLVPVl1/YDz+ycSVyrnF+/Gs7Dp3qxt1O6E2H1VlZTQUfebhSVoc9P54lWtN7lSbPiu+aC2hxzBhEju5dSOxCyhUB+4mYo6K4se1rxAjHiIAsOXhthe5yp8xLrUPrKHC/At5x3ZHwGnGauk2/cNLB6t+xnmraFyPXXCDQ31pR5hYFvgFlj6YciisnIFhVZ72As90nw==";
         string memory RDE = "BHYLnoDs1Yo3Fm9ApX/sPrBgB1d80p8vPABWchDToo9NaeTY+y5hXcoalUCS+lmyCWGmp0x3bXyzppCNhvjh6IKTB7G23D6ZvfuFoPJ/6z+/SJfS8tV2oyywgxufkqt5Az721DduCVpH7Vw+YZztnKz2DrmX2ypfK7yBhaI9P5YMNpODVLVrbvK8czb1GLQrASHHe3XSlgTEV6GUJV1cs9z+RcRsitR9wbpNLeC6qGEkcazQ/jtaV1iMRNZdDfyCM/4kH+4BU+2m2ykkCytp7jbaXiBcrUdEr7oPc1O3pbGxrW7NAv14HVKKEIYfXNzQMxPOGJwbbA==";
-        oraclize_query("URL",RUE,RDE,23000);
+        oraclize_query("URL",RUE,RDE,500000);
     }
 //------------------------------------------------------------GAMING---------------------------------------------------//
     function roll(uint rollUnder)public payable{
@@ -115,8 +111,10 @@ contract NPMk2 is usingOraclize,owned{
         EP coin = EP(EPLAY);
         string memory salted = strConcat(salt,salt,randomStore,salt);
         action storage prevRoll = rolls[msg.sender];
+        if(prevRoll.rerolled)revert();
         coin.contractBurn(msg.sender,1000);
         newRoll(msg.sender,prevRoll.bet,prevRoll.odds,uint256(keccak256(salted))%99);
+        rolls[msg.sender].rerolled = true;
         update();
         play(playKey);
     }
@@ -124,8 +122,10 @@ contract NPMk2 is usingOraclize,owned{
         NP coin = NP(NPLAY);
         string memory salted = strConcat(salt,salt,randomStore,salt);
         action storage prevRoll = rolls[msg.sender];
+        if(prevRoll.rerolled)revert();
         coin.contractBurn(msg.sender,1000);
         newRoll(msg.sender,prevRoll.bet,prevRoll.odds,uint256(keccak256(salted))%99);
+        rolls[msg.sender].rerolled = true;
         update();
         play(playKey);
     }
