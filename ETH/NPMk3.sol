@@ -101,15 +101,15 @@ contract NPMk3 is usingOraclize,owned{
     function roll(uint rollUnder)public payable{
         if(rollUnder==0||rollUnder>=100)revert();
         //if(100*getBet(msg.sender)/rollUnder > house.balance/8)revert();
-        string memory salted = strConcat(salt,randomStore,salt);
-        Log(salted);
+        
+        
         newRoll(msg.sender,msg.value,rollUnder,uint256(keccak256(salted))%99);
         update();
         play(playKey);
     }
     function rerollEPLAY() public payable{
         EP coin = EP(EPLAY);
-        string memory salted = strConcat(salt,salt,randomStore,salt);
+        
         action storage prevRoll = rolls[msg.sender];
         if(prevRoll.rerolled)revert();
         coin.contractBurn(msg.sender,1000);
