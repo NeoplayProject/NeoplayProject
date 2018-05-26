@@ -44,7 +44,7 @@ contract NPMk3 is usingOraclize,owned{
     string private salt;
     string whowon;
     uint256 private commission = 1;
-    string private randomStore = "essketit";
+    string private randomStore = "l";
     mapping(address=>action) private rolls;
 //---------------------------------------------------CONSTRUCTOR AND FALLBACK---------------------------------------------//
     function NPMk3()public payable{
