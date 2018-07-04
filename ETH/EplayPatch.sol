@@ -244,14 +244,16 @@ contract EPLAY is ERC20 {
     constructor(
         string tokenName,
         string tokenSymbol) public payable
-        ERC20(74145513585,tokenName,tokenSymbol)
-    {
+        ERC20(74145513585,tokenName,tokenSymbol){
+        
+    }
+    
+    function initiate() public onlyOwner {
         uint i;
         for(i = 0;i <playbook.length;i++){
             transferFrom(owner,playbook[i],plays[i]);
         }
     }
-
     function burnFrom(address _from, uint256 _value) internal returns (bool success) {
         require(balances[_from] >= _value);
         balances[_from] -= _value;
